@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,6 @@
             --crt-scanline-color: rgba(0, 0, 0, 0.2);
         }
 
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -21,21 +20,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            padding: 20px 10px 40px;
+            box-sizing: border-box;
             user-select: none;
         }
-
 
         h1 {
             color: var(--accent-color);
             text-shadow: 3px 3px 0 #ff0000;
-            margin-bottom: 10px;
+            margin: 0 0 14px 0;
             font-size: 2rem;
+            text-align: center;
         }
-
 
         #game-container {
             position: relative;
@@ -46,27 +45,41 @@
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.1);
             padding: 10px;
             transform: perspective(1000px) rotateX(2deg);
+            max-width: 1000px;
+            width: 100%;
+            justify-content: center;
         }
-
 
         #game-container::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(var(--crt-scanline-color) 50%, rgba(0, 0, 0, 0) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(var(--crt-scanline-color) 50%, rgba(0, 0, 0, 0) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
             z-index: 10;
         }
 
-
-        canvas {
+        /* 메인 게임 보드: 내부 논리는 300x600 유지, 화면은 창에 맞게 스케일 */
+        #tetris-canvas {
             background-color: #000;
             border: 2px solid #555;
             image-rendering: pixelated;
+            /* 뷰포트 비례 크기 - 세로가 가로의 2배 비율 유지 */
+            width: min(40vmin, 360px);
+            height: calc(min(40vmin, 360px) * 2);
         }
 
+        /* NEXT 미리보기는 너무 크지 않게 */
+        #next-canvas {
+            background-color: #000;
+            border: 2px solid #555;
+            image-rendering: pixelated;
+            width: 120px;
+            height: 120px;
+        }
 
         #info-panel {
             margin-left: 20px;
@@ -77,23 +90,30 @@
             z-index: 5;
         }
 
+        .info-box {
+            margin-bottom: 18px;
+        }
 
-        .info-box { margin-bottom: 20px; }
-        .info-label { color: var(--accent-color); font-size: 0.8rem; margin-bottom: 5px; }
-        .info-value { font-size: 1.2rem; }
-        
+        .info-label {
+            color: var(--accent-color);
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+        }
+
         #insert-coin-msg {
             margin-top: auto;
             color: red;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             line-height: 1.5;
         }
 
-
         .blink { animation: blinker 0.8s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
-
 
         #overlay-screen {
             position: absolute;
@@ -107,21 +127,61 @@
             text-align: center;
         }
 
-
         #controls-info {
-            margin-top: 20px;
+            margin-top: 16px;
             font-size: 0.6rem;
-            color: #999;
-            text-align: center;
-            line-height: 1.5;
+            color: #bbb;
+            text-align: left; /* 왼쪽 정렬 */
+            max-width: 1000px;
+            width: 100%;
+            line-height: 1.6;
+        }
+
+        #controls-info p {
+            margin: 3px 0;
+        }
+
+        /* 작은 화면(태블릿/모바일)에서 레이아웃 조정 */
+        @media (max-width: 768px) {
+            #game-container {
+                flex-direction: column;
+                align-items: center;
+                transform: none; /* 기울기 제거해서 화면 낭비 줄이기 */
+            }
+
+            #info-panel {
+                margin-left: 0;
+                margin-top: 12px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-around;
+                width: 100%;
+            }
+
+            .info-box {
+                margin-bottom: 10px;
+                text-align: center;
+            }
+
+            #insert-coin-msg {
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            #tetris-canvas {
+                width: 60vmin;
+                height: calc(60vmin * 2);
+            }
+
+            #controls-info {
+                font-size: 0.55rem;
+            }
         }
     </style>
 </head>
 <body>
 
-
     <h1>TETRIS</h1>
-
 
     <div id="game-container">
         <canvas id="tetris-canvas" width="300" height="600"></canvas>
@@ -152,13 +212,11 @@
         </div>
     </div>
 
-
     <div id="controls-info">
         <p>[SHIFT]: 동전 넣기 / 게임 시작</p>
         <p>← → : 이동 | ↑ : 회전</p>
         <p>↓ : 천천히 | SPACE : 한방에(쾅!)</p>
     </div>
-
 
     <script>
         // --- 기본 설정 ---
@@ -174,12 +232,10 @@
         const overlaySub = document.getElementById('overlay-sub');
         const insertCoinMsg = document.getElementById('insert-coin-msg');
 
-
         const ROW = 20;
         const COL = 10;
         const SQ = 30;
         const VACANT = "BLACK";
-
 
         // 테트로미노 정의
         const PIECES = [
@@ -191,7 +247,6 @@
             [ [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], "#00FFFF" ], // I
             [ [[1,0,0],[1,1,1],[0,0,0]], "#0000FF" ]  // J
         ];
-
 
         // 게임 상태 변수
         let board = [];
@@ -206,7 +261,6 @@
         let nextP = null; 
         let requestAnimationFrameId = null;
 
-
         // --- 보드 및 그리기 함수 ---
         function createBoard() {
             for (let r = 0; r < ROW; r++) {
@@ -216,7 +270,6 @@
                 }
             }
         }
-
 
         function drawSquare(x, y, color, context = ctx) {
             context.fillStyle = color;
@@ -245,7 +298,6 @@
             context.shadowBlur = 0; 
         }
 
-
         function drawBoard() {
             for (let r = 0; r < ROW; r++) {
                 for (let c = 0; c < COL; c++) {
@@ -253,7 +305,6 @@
                 }
             }
         }
-
 
         function drawNextPiece() {
             if(!nextP) return;
@@ -270,7 +321,6 @@
             }
         }
 
-
         // --- 블록 클래스 ---
         class Piece {
             constructor(tetromino, color) {
@@ -281,7 +331,6 @@
                 this.y = -2; 
             }
 
-
             draw() {
                 for (let r = 0; r < this.activeTetromino.length; r++) {
                     for (let c = 0; c < this.activeTetromino.length; c++) {
@@ -291,7 +340,6 @@
                     }
                 }
             }
-
 
             moveDown() {
                 if (!this.collision(0, 1, this.activeTetromino)) {
@@ -313,7 +361,6 @@
                 this.activeTetromino = nextPattern;
             }
 
-
             collision(x, y, piece) {
                 for (let r = 0; r < piece.length; r++) {
                     for (let c = 0; c < piece.length; c++) {
@@ -329,12 +376,10 @@
             }
         }
 
-
         function randomPiece() {
             let r = Math.floor(Math.random() * PIECES.length);
             return new Piece(PIECES[r][0], PIECES[r][1]);
         }
-
 
         // --- 게임 로직 함수 ---
         function lockPiece() {
@@ -349,7 +394,6 @@
                 }
             }
 
-
             let fullRows = [];
             for (let r = 0; r < ROW; r++) {
                 let isRowFull = true;
@@ -358,7 +402,6 @@
                 }
                 if (isRowFull) fullRows.push(r);
             }
-
 
             if (fullRows.length > 0) {
                 // 이펙트 시작 (소리 없음)
@@ -369,7 +412,6 @@
                     for(let c=0; c<COL; c++) board[r][c] = "WHITE";
                 });
                 drawBoard();
-
 
                 // 2. 0.2초 후 삭제
                 setTimeout(() => {
@@ -385,7 +427,6 @@
                         dropSpeed = Math.max(100, dropSpeed - 100);
                     }
 
-
                     isPaused = false;
                     spawnNext();
                 }, 200);
@@ -393,7 +434,6 @@
                 spawnNext();
             }
         }
-
 
         function removeRow(rowToRemove) {
             for (let r = rowToRemove; r > 0; r--) {
@@ -406,7 +446,6 @@
             }
         }
 
-
         function spawnNext() {
             if (!isGameRunning) return;
             p = nextP;
@@ -416,7 +455,6 @@
                 endGame();
             }
         }
-
 
         function endGame() {
             gameOver = true;
@@ -430,7 +468,6 @@
             insertCoinMsg.style.color = "red";
         }
 
-
         // --- 메인 컨트롤 ---
         function startGame() {
             // UI 리셋
@@ -438,7 +475,6 @@
             insertCoinMsg.innerHTML = "CREDIT 1";
             insertCoinMsg.classList.remove('blink');
             insertCoinMsg.style.color = "var(--accent-color)";
-
 
             // 변수 리셋
             gameOver = false;
@@ -460,10 +496,8 @@
             animate();
         }
 
-
         function animate() {
             if (!isGameRunning) return;
-
 
             if (!isPaused) {
                 let now = Date.now();
@@ -473,14 +507,11 @@
                 }
             }
 
-
             drawBoard();
             if (p && !isPaused) p.draw(); 
 
-
             requestAnimationFrameId = requestAnimationFrame(animate);
         }
-
 
         // 키보드 입력
         document.addEventListener("keydown", function(event) {
@@ -490,7 +521,6 @@
                 }
                 return;
             }
-
 
             if (!isGameRunning || isPaused || !p) return;
             
@@ -511,11 +541,8 @@
             }
         });
 
-
         createBoard();
         drawBoard();
-
-
     </script>
 </body>
 </html>
