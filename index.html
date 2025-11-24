@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>레트로 아케이드 테트리스 (No Sound)</title>
+    <title>레트로 아케이드 테트리스</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -20,11 +20,20 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; 
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            overflow: hidden; 
             user-select: none;
+            padding-top: 10px; 
+        }
+        
+        #game-wrapper {
+            transition: transform 0.2s ease-out; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto; 
         }
 
         h1 {
@@ -37,11 +46,13 @@
         #game-container {
             position: relative;
             display: flex;
+            flex-direction: row; 
+            align-items: flex-start;
             background-color: var(--screen-bg);
             border: 10px solid #333;
             border-radius: 5px;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.1);
-            padding: 10px;
+            padding: 20px; 
             transform: perspective(1000px) rotateX(2deg);
         }
 
@@ -62,30 +73,34 @@
             image-rendering: pixelated;
         }
 
-        #info-panel {
+        /* 왼쪽/오른쪽 패널 스타일 (생략)... */
+        #left-panel {
+            margin-right: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 600px; 
+            text-align: right; 
+            min-width: 140px;
+            z-index: 5;
+        }
+        .control-group { margin-bottom: 25px; }
+        .key-name { color: var(--accent-color); font-size: 0.8rem; margin-bottom: 5px; }
+        .key-desc { font-size: 0.6rem; color: #999; line-height: 1.4; }
+        #right-panel {
             margin-left: 20px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            min-width: 150px;
+            min-width: 140px;
             z-index: 5;
         }
-
         .info-box { margin-bottom: 20px; }
         .info-label { color: var(--accent-color); font-size: 0.8rem; margin-bottom: 5px; }
         .info-value { font-size: 1.2rem; }
-        
-        #insert-coin-msg {
-            margin-top: auto;
-            color: red;
-            font-size: 0.9rem;
-            text-align: center;
-            line-height: 1.5;
-        }
-
+        #insert-coin-msg { margin-top: auto; color: red; font-size: 0.9rem; text-align: center; line-height: 1.5; }
         .blink { animation: blinker 0.8s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
-
         #overlay-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -98,56 +113,158 @@
             text-align: center;
         }
 
-        #controls-info {
-            margin-top: 20px;
-            font-size: 0.6rem;
-            color: #999;
+        /* --- 개발자 콘솔 스타일 --- */
+        #cheat-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 5px solid var(--accent-color);
+            padding: 20px;
+            z-index: 100;
+            color: #fff;
+            width: 350px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
             text-align: center;
-            line-height: 1.5;
+            font-size: 0.8rem;
         }
+        #cheat-modal h3 {
+            color: var(--accent-color);
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .setting-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .setting-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #cheat-modal input[type="range"] {
+            width: 100%;
+        }
+        #block-ratios {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        #block-ratios > div {
+            text-align: center;
+        }
+        #block-ratios label {
+            margin-bottom: 2px;
+            font-size: 0.7rem;
+        }
+        #block-ratios input {
+            padding: 0;
+            height: 20px;
+        }
+        #cheat-modal button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #333;
+            color: #fff;
+            border: 2px solid #555;
+            padding: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        /* --- 개발자 콘솔 스타일 끝 --- */
+
     </style>
 </head>
 <body>
 
-    <h1>TETRIS</h1>
+    <div id="game-wrapper">
+        <h1>TETRIS</h1>
 
-    <div id="game-container">
-        <canvas id="tetris-canvas" width="300" height="600"></canvas>
-        
-        <div id="info-panel">
-            <div class="info-box">
-                <div class="info-label">SCORE</div>
-                <div id="score" class="info-value">0</div>
+        <div id="game-container">
+            
+            <div id="left-panel">
+                <div class="control-group">
+                    <div class="key-name">SHIFT</div>
+                    <div class="key-desc">INSERT COIN<br>GAME START</div>
+                </div>
+                <div class="control-group">
+                    <div class="key-name">← →</div>
+                    <div class="key-desc">MOVE</div>
+                </div>
+                <div class="control-group">
+                    <div class="key-name">↑</div>
+                    <div class="key-desc">ROTATE</div>
+                </div>
+                <div class="control-group">
+                    <div class="key-name">↓</div>
+                    <div class="key-desc">SOFT DROP</div>
+                </div>
+                <div class="control-group">
+                    <div class="key-name">SPACE</div>
+                    <div class="key-desc">HARD DROP</div>
+                </div>
             </div>
-            <div class="info-box">
-                <div class="info-label">LEVEL</div>
-                <div id="level" class="info-value">1</div>
-            </div>
-            <div class="info-box">
-                <div class="info-label">NEXT</div>
-                <canvas id="next-canvas" width="120" height="120"></canvas>
+
+            <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            
+            <div id="right-panel">
+                <div class="info-box">
+                    <div class="info-label">SCORE</div>
+                    <div id="score" class="info-value">0</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">LEVEL</div>
+                    <div id="level" class="info-value">1</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">NEXT</div>
+                    <canvas id="next-canvas" width="120" height="120"></canvas>
+                </div>
+                
+                 <div id="insert-coin-msg" class="blink">
+                    INSERT COIN<br>
+                    <span style="font-size:0.6rem; color:white;">[SHIFT]</span>
+                 </div>
             </div>
             
-             <div id="insert-coin-msg" class="blink">
-                INSERT COIN<br>
-                <span style="font-size:0.6rem; color:white;">[SHIFT]</span>
+            <div id="overlay-screen">
+                <div id="overlay-title" style="font-size: 1.5rem; margin-bottom: 20px; color: var(--accent-color);">PRESS SHIFT<br>TO START</div>
+                <div id="overlay-sub" style="font-size: 0.7rem; color: #fff;">1 COIN = 1 PLAY</div>
             </div>
         </div>
-        
-        <div id="overlay-screen">
-            <div id="overlay-title" style="font-size: 1.5rem; margin-bottom: 20px; color: var(--accent-color);">PRESS SHIFT<br>TO START</div>
-            <div id="overlay-sub" style="font-size: 0.7rem; color: #fff;">1 COIN = 1 PLAY</div>
+    </div> 
+
+    <div id="cheat-modal">
+        <h3>DEVELOPER CONSOLE (Ctrl+Alt+C)</h3>
+        <div class="setting-group">
+            <label>Level (1-10): <span id="cheat-level-value">1</span></label>
+            <input type="range" id="cheat-level" min="1" max="10" value="1">
         </div>
+        
+        <div class="setting-group">
+            <label style="text-align: center;">Block Probability Multiplier (1x to 5x)</label>
+            <div id="block-ratios">
+                <div><label>Z (0) (1x)</label><input type="range" class="block-freq" data-piece-index="0" min="1" max="5" step="1" value="1"></div>
+                <div><label>S (1) (1x)</label><input type="range" class="block-freq" data-piece-index="1" min="1" max="5" step="1" value="1"></div>
+                <div><label>T (2) (1x)</label><input type="range" class="block-freq" data-piece-index="2" min="1" max="5" step="1" value="1"></div>
+                <div><label>O (3) (1x)</label><input type="range" class="block-freq" data-piece-index="3" min="1" max="5" step="1" value="1"></div>
+                <div><label>L (4) (1x)</label><input type="range" class="block-freq" data-piece-index="4" min="1" max="5" step="1" value="1"></div>
+                <div><label>I (5) (1x)</label><input type="range" class="block-freq" data-piece-index="5" min="1" max="5" step="1" value="1"></div>
+                <div><label>J (6) (1x)</label><input type="range" class="block-freq" data-piece-index="6" min="1" max="5" step="1" value="1"></div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <button id="cheat-pause-toggle">PAUSE/RESUME GAME</button>
+        </div>
+        <button id="cheat-close">CLOSE</button>
     </div>
 
-    <div id="controls-info">
-        <p>[SHIFT]: 동전 넣기 / 게임 시작</p>
-        <p>← → : 이동 | ↑ : 회전</p>
-        <p>↓ : 천천히 | SPACE : 한방에(쾅!)</p>
-    </div>
 
     <script>
-        // --- 기본 설정 ---
+        // --- 기본 설정 및 변수 선언 ---
         const canvas = document.getElementById('tetris-canvas');
         const ctx = canvas.getContext('2d');
         const nextCanvas = document.getElementById('next-canvas');
@@ -159,21 +276,22 @@
         const overlayTitle = document.getElementById('overlay-title');
         const overlaySub = document.getElementById('overlay-sub');
         const insertCoinMsg = document.getElementById('insert-coin-msg');
+        const gameWrapper = document.getElementById('game-wrapper');
 
         const ROW = 20;
         const COL = 10;
         const SQ = 30;
         const VACANT = "BLACK";
 
-        // 테트로미노 정의
+        // 테트로미노 정의: Z, S, T, O, L, I, J (인덱스 0부터 6)
         const PIECES = [
-            [ [[1,1,0],[0,1,1],[0,0,0]], "#FF0000" ], // Z
-            [ [[0,1,1],[1,1,0],[0,0,0]], "#00FF00" ], // S
-            [ [[0,1,0],[1,1,1],[0,0,0]], "#800080" ], // T
-            [ [[1,1],[1,1]],             "#FFFF00" ], // O
-            [ [[0,0,1],[1,1,1],[0,0,0]], "#FFA500" ], // L
-            [ [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], "#00FFFF" ], // I
-            [ [[1,0,0],[1,1,1],[0,0,0]], "#0000FF" ]  // J
+            [ [[1,1,0],[0,1,1],[0,0,0]], "#FF0000" ], // Z (0)
+            [ [[0,1,1],[1,1,0],[0,0,0]], "#00FF00" ], // S (1)
+            [ [[0,1,0],[1,1,1],[0,0,0]], "#800080" ], // T (2)
+            [ [[1,1],[1,1]],             "#FFFF00" ], // O (3)
+            [ [[0,0,1],[1,1,1],[0,0,0]], "#FFA500" ], // L (4)
+            [ [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], "#00FFFF" ], // I (5)
+            [ [[1,0,0],[1,1,1],[0,0,0]], "#0000FF" ]  // J (6)
         ];
 
         // 게임 상태 변수
@@ -189,7 +307,41 @@
         let nextP = null; 
         let requestAnimationFrameId = null;
 
-        // --- 보드 및 그리기 함수 ---
+        // 동적 크기 측정을 위한 변수
+        let baseGameWidth = 0;
+        let baseGameHeight = 0;
+        
+        // 치트 코드 변수: 모든 블럭의 등장 비율. 기본값은 1 (1배)
+        let pieceProbabilities = [1, 1, 1, 1, 1, 1, 1]; // Z, S, T, O, L, I, J 순서
+
+        // --- 반응형 스케일링 함수 (동일) ---
+        function scaleGame() {
+            if (baseGameHeight === 0) {
+                const currentTransform = gameWrapper.style.transform;
+                gameWrapper.style.transform = 'scale(1)'; 
+                
+                const rect = gameWrapper.getBoundingClientRect();
+                baseGameWidth = rect.width;
+                baseGameHeight = rect.height + 40; 
+                
+                gameWrapper.style.transform = currentTransform; 
+            }
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            const scaleX = viewportWidth / baseGameWidth;
+            const scaleY = viewportHeight / baseGameHeight;
+            
+            const scale = Math.min(scaleX, scaleY) * 0.95; 
+            
+            const finalScale = Math.min(1.0, scale);
+
+            gameWrapper.style.transform = `scale(${finalScale})`;
+            gameWrapper.style.transformOrigin = 'center top'; 
+        }
+
+        // --- 게임 로직 함수 ---
         function createBoard() {
             for (let r = 0; r < ROW; r++) {
                 board[r] = [];
@@ -203,7 +355,6 @@
             context.fillStyle = color;
             context.fillRect(x * SQ, y * SQ, SQ, SQ);
             if (color !== VACANT) {
-                // 이펙트: 흰색이면 빛나게
                 if (color === "WHITE") {
                     context.fillStyle = "#FFFFFF";
                     context.fillRect(x * SQ, y * SQ, SQ, SQ);
@@ -249,7 +400,6 @@
             }
         }
 
-        // --- 블록 클래스 ---
         class Piece {
             constructor(tetromino, color) {
                 this.tetromino = tetromino;
@@ -304,17 +454,39 @@
             }
         }
 
+        // **수정된 randomPiece 함수: 가중치 로직을 명확히 구현**
         function randomPiece() {
-            let r = Math.floor(Math.random() * PIECES.length);
-            return new Piece(PIECES[r][0], PIECES[r][1]);
+            // 1. 전체 가중치 합 계산
+            let totalWeight = pieceProbabilities.reduce((sum, weight) => sum + weight, 0);
+            
+            // 2. 0부터 totalWeight 사이의 난수 생성
+            let randomWeight = Math.random() * totalWeight;
+            
+            // 3. 난수가 해당하는 블럭 찾기
+            let cumulativeWeight = 0;
+            let selectedIndex = -1;
+            
+            for (let i = 0; i < PIECES.length; i++) {
+                cumulativeWeight += pieceProbabilities[i];
+                if (randomWeight < cumulativeWeight) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+
+            if (selectedIndex === -1) {
+                 // 안전장치: 마지막 블럭을 선택 (거의 발생하지 않음)
+                selectedIndex = PIECES.length - 1; 
+            }
+            
+            return new Piece(PIECES[selectedIndex][0], PIECES[selectedIndex][1]);
         }
 
-        // --- 게임 로직 함수 ---
         function lockPiece() {
             for (let r = 0; r < p.activeTetromino.length; r++) {
                 for (let c = 0; c < p.activeTetromino.length; c++) {
                     if (!p.activeTetromino[r][c]) continue;
-                    if (p.y + r < 0) { // 천장 충돌
+                    if (p.y + r < 0) {
                         endGame();
                         return;
                     }
@@ -332,16 +504,13 @@
             }
 
             if (fullRows.length > 0) {
-                // 이펙트 시작 (소리 없음)
                 isPaused = true; 
                 
-                // 1. 하얗게 빛나기
                 fullRows.forEach(r => {
                     for(let c=0; c<COL; c++) board[r][c] = "WHITE";
                 });
                 drawBoard();
 
-                // 2. 0.2초 후 삭제
                 setTimeout(() => {
                     fullRows.forEach(r => {
                         removeRow(r); 
@@ -352,7 +521,9 @@
                     if(score >= level * 500) {
                         level++;
                         levelElement.innerHTML = level;
-                        dropSpeed = Math.max(100, dropSpeed - 100);
+                        // 레벨 상승 시 속도 조절
+                        let newDropSpeed = 1000 - (level - 1) * 100;
+                        dropSpeed = Math.max(100, newDropSpeed);
                     }
 
                     isPaused = false;
@@ -387,16 +558,17 @@
         function endGame() {
             gameOver = true;
             isGameRunning = false;
+            
             overlayTitle.innerHTML = "GAME OVER";
             overlayTitle.style.color = "red";
             overlaySub.innerHTML = "PRESS [SHIFT] TO RESTART";
+            
             overlayScreen.style.display = 'flex';
-            insertCoinMsg.innerHTML = "INSERT COIN";
+            insertCoinMsg.innerHTML = "INSERT COIN<br><span style='font-size:0.6rem; color:white;'>[SHIFT]</span>";
             insertCoinMsg.classList.add('blink');
             insertCoinMsg.style.color = "red";
         }
 
-        // --- 메인 컨트롤 ---
         function startGame() {
             // UI 리셋
             overlayScreen.style.display = 'none';
@@ -409,8 +581,12 @@
             isGameRunning = true;
             isPaused = false;
             score = 0;
-            level = 1;
-            dropSpeed = 1000;
+            
+            // 치트 콘솔에서 설정된 레벨로 시작
+            level = parseInt(document.getElementById('cheat-level').value) || 1; 
+            let newDropSpeed = 1000 - (level - 1) * 100;
+            dropSpeed = Math.max(100, newDropSpeed);
+            
             scoreElement.innerHTML = score;
             levelElement.innerHTML = level;
             
@@ -453,11 +629,11 @@
             if (!isGameRunning || isPaused || !p) return;
             
             switch(event.keyCode) {
-                case 37: p.moveLeft(); break;
-                case 38: p.rotate(); break;
-                case 39: p.moveRight(); break;
-                case 40: p.moveDown(); dropStart = Date.now(); break; 
-                case 32: // Spacebar
+                case 37: p.moveLeft(); break; // ←
+                case 38: p.rotate(); break;   // ↑
+                case 39: p.moveRight(); break; // →
+                case 40: p.moveDown(); dropStart = Date.now(); break; // ↓
+                case 32: // Spacebar (하드 드롭)
                     while(!p.collision(0, 1, p.activeTetromino)) {
                          p.y++;
                     }
@@ -469,8 +645,101 @@
             }
         });
 
+        // --- 개발자 치트 콘솔 로직 ---
+        const cheatModal = document.getElementById('cheat-modal');
+        const levelRange = document.getElementById('cheat-level');
+        const levelValueSpan = document.getElementById('cheat-level-value');
+        const pauseToggleBtn = document.getElementById('cheat-pause-toggle');
+        const cheatCloseBtn = document.getElementById('cheat-close');
+        const blockFreqInputs = document.querySelectorAll('.block-freq');
+
+
+        // 치트 콘솔 열기/닫기 이벤트: Ctrl + Alt + C
+        document.addEventListener("keydown", function(event) {
+            if (event.ctrlKey && event.altKey && event.keyCode === 67) { // C
+                event.preventDefault();
+                if (cheatModal.style.display === 'flex') {
+                    cheatModal.style.display = 'none';
+                } else {
+                    cheatModal.style.display = 'flex';
+                    cheatModal.style.flexDirection = 'column';
+                }
+            }
+        });
+
+        // 레벨 조절 이벤트
+        levelRange.addEventListener('input', (e) => {
+            const newLevel = parseInt(e.target.value);
+            // 게임 중일 때만 즉시 반영
+            if (isGameRunning && !isPaused) {
+                level = newLevel;
+                levelElement.innerHTML = newLevel;
+                let newDropSpeed = 1000 - (newLevel - 1) * 100;
+                dropSpeed = Math.max(100, newDropSpeed);
+            }
+            levelValueSpan.textContent = newLevel;
+        });
+
+        // **수정된 블럭 비율 조절 이벤트**
+        blockFreqInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.pieceIndex);
+                // **parseInt를 사용하여 정수 비율을 반영**
+                const ratio = parseInt(e.target.value);
+                pieceProbabilities[index] = ratio;
+                
+                // 레이블에 비율 표시
+                e.target.parentNode.querySelector('label').textContent = `${['Z', 'S', 'T', 'O', 'L', 'I', 'J'][index]} (${ratio}x)`;
+            });
+            // 초기 로드 시 비율 표시 업데이트
+             const index = parseInt(input.dataset.pieceIndex);
+             input.parentNode.querySelector('label').textContent = `${['Z', 'S', 'T', 'O', 'L', 'I', 'J'][index]} (${input.value}x)`;
+        });
+
+        // 일시 정지/재개
+        pauseToggleBtn.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            
+            isPaused = !isPaused;
+            if (isPaused) {
+                overlayScreen.style.display = 'flex';
+                overlayTitle.innerHTML = "PAUSED";
+                overlaySub.innerHTML = "RESUME GAME";
+            } else {
+                overlayScreen.style.display = 'none';
+                if (!requestAnimationFrameId) {
+                    animate();
+                }
+            }
+        });
+        
+        // 닫기 버튼
+        cheatCloseBtn.addEventListener('click', () => {
+            cheatModal.style.display = 'none';
+        });
+
+        // --- 초기화 및 이벤트 연결 ---
         createBoard();
         drawBoard();
+        
+        // 스케일링을 로드와 리사이즈 이벤트에 연결
+        window.addEventListener('load', () => {
+            scaleGame();
+            
+            // 치트 콘솔 초기값 동기화
+            levelRange.value = level;
+            levelValueSpan.textContent = level;
+            
+            // 블럭 비율 초기값 동기화
+            blockFreqInputs.forEach(input => {
+                const index = parseInt(input.dataset.pieceIndex);
+                // **초기 배열 값과 동기화**
+                input.value = pieceProbabilities[index];
+                input.parentNode.querySelector('label').textContent = `${['Z', 'S', 'T', 'O', 'L', 'I', 'J'][index]} (${input.value}x)`;
+            });
+        });
+
+        window.addEventListener('resize', scaleGame);
 
     </script>
 </body>
