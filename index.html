@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -12,6 +12,7 @@
             --accent-color: #fce300;
             --crt-scanline-color: rgba(0, 0, 0, 0.2);
         }
+
 
         body {
             background-color: var(--bg-color);
@@ -36,12 +37,14 @@
             margin: 0 auto; 
         }
 
+
         h1 {
             color: var(--accent-color);
             text-shadow: 3px 3px 0 #ff0000;
             margin-bottom: 10px;
             font-size: 2rem;
         }
+
 
         #game-container {
             position: relative;
@@ -56,6 +59,7 @@
             transform: perspective(1000px) rotateX(2deg);
         }
 
+
         #game-container::before {
             content: " ";
             display: block;
@@ -67,11 +71,13 @@
             z-index: 10;
         }
 
+
         canvas {
             background-color: #000;
             border: 2px solid #555;
             image-rendering: pixelated;
         }
+
 
         /* 왼쪽/오른쪽 패널 스타일 (생략)... */
         #left-panel {
@@ -112,6 +118,7 @@
             z-index: 20;
             text-align: center;
         }
+
 
         /* --- 개발자 콘솔 스타일 --- */
         #cheat-modal {
@@ -175,12 +182,15 @@
         }
         /* --- 개발자 콘솔 스타일 끝 --- */
 
+
     </style>
 </head>
 <body>
 
+
     <div id="game-wrapper">
         <h1>TETRIS</h1>
+
 
         <div id="game-container">
             
@@ -206,6 +216,7 @@
                     <div class="key-desc">HARD DROP</div>
                 </div>
             </div>
+
 
             <canvas id="tetris-canvas" width="300" height="600"></canvas>
             
@@ -236,6 +247,7 @@
         </div>
     </div> 
 
+
     <div id="cheat-modal">
         <h3>DEVELOPER CONSOLE (Ctrl+Alt+C)</h3>
         <div class="setting-group">
@@ -256,11 +268,14 @@
             </div>
         </div>
 
+
         <div class="setting-group">
             <button id="cheat-pause-toggle">PAUSE/RESUME GAME</button>
         </div>
         <button id="cheat-close">CLOSE</button>
     </div>
+
+
 
 
     <script>
@@ -278,10 +293,12 @@
         const insertCoinMsg = document.getElementById('insert-coin-msg');
         const gameWrapper = document.getElementById('game-wrapper');
 
+
         const ROW = 20;
         const COL = 10;
         const SQ = 30;
         const VACANT = "BLACK";
+
 
         // 테트로미노 정의: Z, S, T, O, L, I, J (인덱스 0부터 6)
         const PIECES = [
@@ -293,6 +310,7 @@
             [ [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], "#00FFFF" ], // I (5)
             [ [[1,0,0],[1,1,1],[0,0,0]], "#0000FF" ]  // J (6)
         ];
+
 
         // 게임 상태 변수
         let board = [];
@@ -307,12 +325,14 @@
         let nextP = null; 
         let requestAnimationFrameId = null;
 
+
         // 동적 크기 측정을 위한 변수
         let baseGameWidth = 0;
         let baseGameHeight = 0;
         
         // 치트 코드 변수: 모든 블럭의 등장 비율. 기본값은 1 (1배)
         let pieceProbabilities = [1, 1, 1, 1, 1, 1, 1]; // Z, S, T, O, L, I, J 순서
+
 
         // --- 반응형 스케일링 함수 (동일) ---
         function scaleGame() {
@@ -327,6 +347,7 @@
                 gameWrapper.style.transform = currentTransform; 
             }
 
+
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             
@@ -337,9 +358,11 @@
             
             const finalScale = Math.min(1.0, scale);
 
+
             gameWrapper.style.transform = `scale(${finalScale})`;
             gameWrapper.style.transformOrigin = 'center top'; 
         }
+
 
         // --- 게임 로직 함수 ---
         function createBoard() {
@@ -350,6 +373,7 @@
                 }
             }
         }
+
 
         function drawSquare(x, y, color, context = ctx) {
             context.fillStyle = color;
@@ -377,6 +401,7 @@
             context.shadowBlur = 0; 
         }
 
+
         function drawBoard() {
             for (let r = 0; r < ROW; r++) {
                 for (let c = 0; c < COL; c++) {
@@ -384,6 +409,7 @@
                 }
             }
         }
+
 
         function drawNextPiece() {
             if(!nextP) return;
@@ -400,6 +426,7 @@
             }
         }
 
+
         class Piece {
             constructor(tetromino, color) {
                 this.tetromino = tetromino;
@@ -408,6 +435,7 @@
                 this.x = Math.floor(COL / 2) - Math.floor(this.activeTetromino[0].length / 2);
                 this.y = -2; 
             }
+
 
             draw() {
                 for (let r = 0; r < this.activeTetromino.length; r++) {
@@ -418,6 +446,7 @@
                     }
                 }
             }
+
 
             moveDown() {
                 if (!this.collision(0, 1, this.activeTetromino)) {
@@ -439,6 +468,7 @@
                 this.activeTetromino = nextPattern;
             }
 
+
             collision(x, y, piece) {
                 for (let r = 0; r < piece.length; r++) {
                     for (let c = 0; c < piece.length; c++) {
@@ -453,6 +483,7 @@
                 return false;
             }
         }
+
 
         // **수정된 randomPiece 함수: 가중치 로직을 명확히 구현**
         function randomPiece() {
@@ -474,6 +505,7 @@
                 }
             }
 
+
             if (selectedIndex === -1) {
                  // 안전장치: 마지막 블럭을 선택 (거의 발생하지 않음)
                 selectedIndex = PIECES.length - 1; 
@@ -481,6 +513,7 @@
             
             return new Piece(PIECES[selectedIndex][0], PIECES[selectedIndex][1]);
         }
+
 
         function lockPiece() {
             for (let r = 0; r < p.activeTetromino.length; r++) {
@@ -494,6 +527,7 @@
                 }
             }
 
+
             let fullRows = [];
             for (let r = 0; r < ROW; r++) {
                 let isRowFull = true;
@@ -503,6 +537,7 @@
                 if (isRowFull) fullRows.push(r);
             }
 
+
             if (fullRows.length > 0) {
                 isPaused = true; 
                 
@@ -510,6 +545,7 @@
                     for(let c=0; c<COL; c++) board[r][c] = "WHITE";
                 });
                 drawBoard();
+
 
                 setTimeout(() => {
                     fullRows.forEach(r => {
@@ -526,6 +562,7 @@
                         dropSpeed = Math.max(100, newDropSpeed);
                     }
 
+
                     isPaused = false;
                     spawnNext();
                 }, 200);
@@ -533,6 +570,7 @@
                 spawnNext();
             }
         }
+
 
         function removeRow(rowToRemove) {
             for (let r = rowToRemove; r > 0; r--) {
@@ -545,6 +583,7 @@
             }
         }
 
+
         function spawnNext() {
             if (!isGameRunning) return;
             p = nextP;
@@ -554,6 +593,7 @@
                 endGame();
             }
         }
+
 
         function endGame() {
             gameOver = true;
@@ -569,12 +609,14 @@
             insertCoinMsg.style.color = "red";
         }
 
+
         function startGame() {
             // UI 리셋
             overlayScreen.style.display = 'none';
             insertCoinMsg.innerHTML = "CREDIT 1";
             insertCoinMsg.classList.remove('blink');
             insertCoinMsg.style.color = "var(--accent-color)";
+
 
             // 변수 리셋
             gameOver = false;
@@ -600,8 +642,10 @@
             animate();
         }
 
+
         function animate() {
             if (!isGameRunning) return;
+
 
             if (!isPaused) {
                 let now = Date.now();
@@ -611,11 +655,14 @@
                 }
             }
 
+
             drawBoard();
             if (p && !isPaused) p.draw(); 
 
+
             requestAnimationFrameId = requestAnimationFrame(animate);
         }
+
 
         // 키보드 입력
         document.addEventListener("keydown", function(event) {
@@ -625,6 +672,7 @@
                 }
                 return;
             }
+
 
             if (!isGameRunning || isPaused || !p) return;
             
@@ -645,6 +693,7 @@
             }
         });
 
+
         // --- 개발자 치트 콘솔 로직 ---
         const cheatModal = document.getElementById('cheat-modal');
         const levelRange = document.getElementById('cheat-level');
@@ -652,6 +701,8 @@
         const pauseToggleBtn = document.getElementById('cheat-pause-toggle');
         const cheatCloseBtn = document.getElementById('cheat-close');
         const blockFreqInputs = document.querySelectorAll('.block-freq');
+
+
 
 
         // 치트 콘솔 열기/닫기 이벤트: Ctrl + Alt + C
@@ -667,6 +718,7 @@
             }
         });
 
+
         // 레벨 조절 이벤트
         levelRange.addEventListener('input', (e) => {
             const newLevel = parseInt(e.target.value);
@@ -679,6 +731,7 @@
             }
             levelValueSpan.textContent = newLevel;
         });
+
 
         // **수정된 블럭 비율 조절 이벤트**
         blockFreqInputs.forEach(input => {
@@ -695,6 +748,7 @@
              const index = parseInt(input.dataset.pieceIndex);
              input.parentNode.querySelector('label').textContent = `${['Z', 'S', 'T', 'O', 'L', 'I', 'J'][index]} (${input.value}x)`;
         });
+
 
         // 일시 정지/재개
         pauseToggleBtn.addEventListener('click', () => {
@@ -718,6 +772,7 @@
             cheatModal.style.display = 'none';
         });
 
+
         // --- 초기화 및 이벤트 연결 ---
         createBoard();
         drawBoard();
@@ -739,9 +794,10 @@
             });
         });
 
+
         window.addEventListener('resize', scaleGame);
+
 
     </script>
 </body>
 </html>
-
